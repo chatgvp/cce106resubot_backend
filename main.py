@@ -12,8 +12,8 @@ openai.api_key = api_key
 app = FastAPI()
 
 origins = [
-    "http://localhost:3000",
     "https://cce106resubot.vercel.app",
+    "http://localhost:3000",
 ]
 
 app.add_middleware(
