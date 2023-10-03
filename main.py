@@ -7,11 +7,7 @@ import openai
 import json
 import _firebasepy
 
-<<<<<<< HEAD
 api_key = "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"
-=======
-api_key = "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"
->>>>>>> 21b1a353827822ec0f6c07693d65ff95c7f05ab2
 openai.api_key = api_key
 app = FastAPI()
 
