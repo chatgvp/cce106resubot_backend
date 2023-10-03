@@ -13,6 +13,7 @@ app = FastAPI()
 
 origins = [
     "https://cce106resubot.vercel.app",
+    "https://cce106resubot-backend.onrender.com/",
     "http://localhost:3000",
 ]
 
