@@ -7,11 +7,14 @@ import openai
 import json
 import _firebasepy
 
-api_key = "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"
+api_key = "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"
 openai.api_key = api_key
 app = FastAPI()
 
-origins = ["https://cce106resubot.vercel.app", "http://localhost:3000"]
+origins = [
+    "http://localhost:3000",
+    "https://cce106resubot.vercel.app",
+]
 
 app.add_middleware(
     CORSMiddleware,
