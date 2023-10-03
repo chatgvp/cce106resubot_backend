@@ -6,27 +6,27 @@ import PyPDF2
 import openai
 import json
 import _firebasepy
+
 api_key = "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"
 openai.api_key = api_key
 app = FastAPI()
 
-origins = [
-    "http://localhost:3000",
-]
+origins = ["http://localhost:3000", "https://cce106resubot.vercel.app/"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_methods=["*"],
     allow_credentials=True,
-    allow_headers=["*"], 
+    allow_headers=["*"],
 )
+
 
 @app.post("/add")
 async def create_job(
     job_title: str = Form(...),
     job_qualifications: str = Form(...),
-    candidate1: UploadFile = File(...)
+    candidate1: UploadFile = File(...),
 ):
     candidate1_bytes = await candidate1.read()
     candidate1_stream = BytesIO(candidate1_bytes)
@@ -34,15 +34,15 @@ async def create_job(
     extracted_text = ""
     for page in pdf_reader1.pages:
         extracted_text += page.extract_text()
-    response_data = chatgptanalyzer(
-                    job_title, job_qualifications, extracted_text
-                )
+    response_data = chatgptanalyzer(job_title, job_qualifications, extracted_text)
     json_object = json.loads(response_data)
     return JSONResponse(content=_firebasepy.add(json_object, candidate1))
+
 
 @app.get("/get")
 async def get():
     return _firebasepy.fetch_all_data()
+
 
 @app.delete("/delete")
 async def delete(key: str):
@@ -64,8 +64,7 @@ def chatgptanalyzer(job_title, job_qualifications, candidate1):
                     "summary": ""
                     }
                 """
-    chatgpt_prompt = (
-        f"""
+    chatgpt_prompt = f"""
         Instructions:
         1. You are a very strict and meticulous human resource manager that oversee the recruitment process and thoroughly and strictly selects the job applicants who best fit the organization's requirements.
         ----------------------------------
@@ -96,14 +95,16 @@ def chatgptanalyzer(job_title, job_qualifications, candidate1):
         ----------------------------------
         9. Make sure to complete the JSON format and leave nothing unanswered.
         """
-    )
     response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a very strict and meticulous human resource manager that oversee the recruitment process and thoroughly and strictly selects the job applicants who best fit the organization's requirements."},
-                {"role": "user", "content": chatgpt_prompt},
-            ],
-            temperature=0.7,
-            max_tokens=1500,
-        )
-    return response["choices"][0]["message"]["content"] 
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a very strict and meticulous human resource manager that oversee the recruitment process and thoroughly and strictly selects the job applicants who best fit the organization's requirements.",
+            },
+            {"role": "user", "content": chatgpt_prompt},
+        ],
+        temperature=0.7,
+        max_tokens=1500,
+    )
+    return response["choices"][0]["message"]["content"]
