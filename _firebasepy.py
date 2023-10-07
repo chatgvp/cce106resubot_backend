@@ -16,17 +16,18 @@ import uuid
 ref = db.reference("/")
 
 
-def add(add_data, candidate1):
+def add(add_data, candidate1, note):
     try:
         bucket = storage.bucket()
         blob = bucket.blob(candidate1.filename)
         candidate1.file.seek(0)
         blob.upload_from_file(candidate1.file)
-        expiration_time = datetime.utcnow() + timedelta(hours=24)
+        expiration_time = datetime.utcnow() + timedelta(hours=100)
         pdf_url = blob.generate_signed_url(expiration=expiration_time)
 
         data_to_store = {
             "pdf_url": pdf_url,
+            "note": note,
             **add_data,
         }
         new_ref = ref.push(data_to_store)
@@ -40,6 +41,16 @@ def delete(child_key):
         child_ref = ref.child(child_key)
         child_ref.delete()
         return f"Child with key {child_key} deleted successfully"
+    except Exception as e:
+        return str(e)
+
+
+def update(child_key, new_value):
+    try:
+        child_ref = ref.child(child_key)
+        child_ref.update({"note": new_value})
+        # child_ref.set(new_value)  # Update the value associated with the child key
+        return f"Child with key {child_key} updated successfully"
     except Exception as e:
         return str(e)
 

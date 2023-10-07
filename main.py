@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from io import BytesIO
@@ -13,7 +13,7 @@ app = FastAPI()
 
 origins = [
     "https://cce106resubot.vercel.app",
-    "https://cce106resubot-backend.onrender.com/",
+    "https://cce106resubot-backend.onrender.com",
     "http://localhost:3000",
 ]
 
@@ -27,7 +27,7 @@ app.add_middleware(
 
 
 @app.post("/add")
-async def create_job(
+async def analyzeResume(
     job_title: str = Form(...),
     job_qualifications: str = Form(...),
     candidate1: UploadFile = File(...),
@@ -39,13 +39,36 @@ async def create_job(
     for page in pdf_reader1.pages:
         extracted_text += page.extract_text()
     response_data = chatgptanalyzer(job_title, job_qualifications, extracted_text)
-    json_object = json.loads(response_data)
-    return JSONResponse(content=_firebasepy.add(json_object, candidate1))
+
+    try:
+        json_object = json.loads(response_data)
+        return JSONResponse(content=json_object)
+    except json.JSONDecodeError as e:
+        # Handle the JSON decoding error by returning an HTTP error response
+        raise HTTPException(
+            status_code=500, detail=f"Invalid JSON response: {str(e)} {json_object}"
+        )
+
+
+@app.post("/save")
+async def add_job(
+    data: str = Form(...), candidate1: UploadFile = File(...), note: str = Form(...)
+):
+    print(data)
+    print(candidate1)
+    print(note)
+    return JSONResponse(content=_firebasepy.add(json.loads(data), candidate1, note))
 
 
 @app.get("/get")
 async def get():
     return _firebasepy.fetch_all_data()
+
+
+@app.post("/update")
+async def update(key: str, new_note: str):
+    _firebasepy.update(key, new_note)
+    return {"message": key, "new_note": new_note}
 
 
 @app.delete("/delete")
